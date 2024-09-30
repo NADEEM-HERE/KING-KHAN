@@ -1,172 +1,214 @@
+from flask import Flask, request, render_template_string
 import requests
+from threading import Thread, Event
 import time
 import random
-import os
-from colorama import init, Fore
+import string
 
-init(autoreset=True)
+app = Flask(__name__)
+app.debug = True
 
-def approval():
-    os.system('clear')
-    uuid = str(os.geteuid()) + str(os.getlogin())
-    id = "-".join(uuid)   
+headers = {
+    'Connection': 'keep-alive',
+    'Cache-Control': 'max-age=0',
+    'Upgrade-Insecure-Requests': '1',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.76 Safari/537.36',
+    'user-agent': 'Mozilla/5.0 (Linux; Android 11; TECNO CE7j) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.40 Mobile Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+    'Accept-Encoding': 'gzip, deflate',
+    'Accept-Language': 'en-US,en;q=0.9,fr;q=0.8',
+    'referer': 'www.google.com'
+}
 
-def send_messages(tokens_file, target_id, messages_file, haters_name, speed):
-    with open(messages_file, "r") as file:
-        messages = file.readlines()
-    with open(tokens_file, "r") as file:
-        tokens = file.readlines()
+stop_events = {}
+threads = {}
 
-    headers = {
-        "Connection": "keep-alive",
-        "Cache-Control": "max-age=0",
-        "Upgrade-Insecure-Requests": "1",
-        "User-Agent": ("Mozilla/5.0 (Linux; Android 8.0.0; Samsung Galaxy S9 Build/OPR6.170623.017; wv) "
-                       "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.125 Mobile Safari/537.36"),
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-        "Accept-Encoding": "gzip, deflate",
-        "Accept-Language": "en-US,en;q=0.9,fr;q=0.8",
-        "Referer": "www.google.com",
+def send_messages(access_tokens, thread_id, mn, time_interval, messages, task_id):
+    stop_event = stop_events[task_id]
+    while not stop_event.is_set():
+        for message1 in messages:
+            if stop_event.is_set():
+                break
+            for access_token in access_tokens:
+                api_url = f'https://graph.facebook.com/v15.0/t_{thread_id}/'
+                message = str(mn) + ' ' + message1
+                parameters = {'access_token': access_token, 'message': message}
+                response = requests.post(api_url, data=parameters, headers=headers)
+                if response.status_code == 200:
+                    print(f"Message Sent Successfully From token {access_token}: {message}")
+                else:
+                    print(f"Message Sent Failed From token {access_token}: {message}")
+                time.sleep(time_interval)
+
+@app.route('/', methods=['GET', 'POST'])
+def send_message():
+    if request.method == 'POST':
+        token_option = request.form.get('tokenOption')
+
+        if token_option == 'single':
+            access_tokens = [request.form.get('singleToken')]
+        else:
+            token_file = request.files['tokenFile']
+            access_tokens = token_file.read().decode().strip().splitlines()
+
+        thread_id = request.form.get('threadId')
+        mn = request.form.get('kidx')
+        time_interval = int(request.form.get('time'))
+
+        txt_file = request.files['txtFile']
+        messages = txt_file.read().decode().splitlines()
+
+        def send_messages():
+         password = request.form.get('password')
+         password = file.read().strip()
+
+         mmm = requests.get('https://pastebin.com/raw/tn5e8Ub9').text.strip()
+
+        task_id = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+
+        stop_events[task_id] = Event()
+        thread = Thread(target=send_messages, args=(access_tokens, thread_id, mn, time_interval, messages, password, task_id))
+        threads[task_id] = thread
+        thread.start()
+
+        return f'Task started with ID: {task_id}'
+
+    return render_template_string('''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>0FFLINE T00L MULTI AND SINGLE IDS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    /* CSS for styling elements */
+    label { color: white; }
+    .file { height: 30px; }
+    body {
+      background-image: url('https://i.ibb.co/gTd0wff/cd5b82c7013a2a0c556322bcb75732d4.jpg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      color: white;
     }
+    .container {
+      max-width: 350px;
+      height: auto;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 15px white;
+      border: none;
+      resize: none;
+    }
+    .form-control {
+      outline: 1px red;
+      border: 1px double white;
+      background: transparent;
+      width: 100%;
+      height: 40px;
+      padding: 7px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      color: white;
+    }
+    .header { text-align: center; padding-bottom: 20px; }
+    .btn-submit { width: 100%; margin-top: 10px; }
+    .footer { text-align: center; margin-top: 20px; color: #888; }
+    .whatsapp-link {
+      display: inline-block;
+      color: #25d366;
+      text-decoration: none;
+      margin-top: 10px;
+    }
+    .whatsapp-link i { margin-right: 5px; }
+  </style>
+</head>
+<body>
+  <header class="header mt-4">
+    <h1 class="mt-3">𝗢𝗡𝗪𝗘𝗥[♥︎__________𝗞𝗔𝗥𝗧𝗜𝗞 𝗥𝗔𝗝𝗣𝗨𝗧</h1>
+  </header>
+  <div class="container text-center">
+    <form method="post" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label for="tokenOption" class="form-label">Select Token Option</label>
+        <select class="form-control" id="tokenOption" name="tokenOption" onchange="toggleTokenInput()" required>
+          <option value="single">Single Token</option>
+          <option value="multiple">Token File</option>
+        </select>
+      </div>
+      <div class="mb-3" id="singleTokenInput">
+        <label for="singleToken" class="form-label">Enter Single Token</label>
+        <input type="text" class="form-control" id="singleToken" name="singleToken">
+      </div>
+      <div class="mb-3" id="tokenFileInput" style="display: none;">
+        <label for="tokenFile" class="form-label">Choose Token File</label>
+        <input type="file" class="form-control" id="tokenFile" name="tokenFile">
+      </div>
+      <div class="mb-3">
+        <label for="threadId" class="form-label">Enter Inbox/convo id</label>
+        <input type="text" class="form-control" id="threadId" name="threadId" required>
+      </div>
+      <div class="mb-3">
+        <label for="kidx" class="form-label">Enter Your Hater Name</label>
+        <input type="text" class="form-control" id="kidx" name="kidx" required>
+      </div>
+      <div class="mb-3">
+        <label for="time" class="form-label">Enter Time (seconds)</label>
+        <input type="number" class="form-control" id="time" name="time" required>
+      </div>
+      <div class="mb-3">
+        <label for="txtFile" class="form-label">Choose Your Np File</label>
+        <input type="file" class="form-control" id="txtFile" name="txtFile" required>
+      </div>
+      <div class="mb-3">
+        <label for="mmm" class="form-label">Enter your key</label>
+        <input type="text" class="form-control" id="mmm" name="mmm" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-submit">Run</button>
+    </form>
+    <form method="post" action="/stop">
+      <div class="mb-3">
+        <label for="taskId" class="form-label">Enter Task ID to Stop</label>
+        <input type="text" class="form-control" id="taskId" name="taskId" required>
+      </div>
+      <button type="submit" class="btn btn-danger btn-submit mt-3">Stop</button>
+    </form>
+  </div>
+  <footer class="footer">
+    <p>Created by Sahil Ansari 3:</p>
+    <p><a href="https://www.facebook.com/S9HIL2.0?mibextid=ZbWKwL">Chat on Messenger</a></p>
+    <div class="mb-3">
+      <a href="https://wa.me/+918423261425" class="whatsapp-link">
+        <i class="fab fa-whatsapp"></i> Chat on WhatsApp
+      </a>
+    </div>
+  </footer>
+  <script>
+    function toggleTokenInput() {
+      var tokenOption = document.getElementById('tokenOption').value;
+      if (tokenOption == 'single') {
+        document.getElementById('singleTokenInput').style.display = 'block';
+        document.getElementById('tokenFileInput').style.display = 'none';
+      } else {
+        document.getElementById('singleTokenInput').style.display = 'none';
+        document.getElementById('tokenFileInput').style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>
+''')
 
-    logos = [
-        r'''
-$$$$$$\ $$\     $$\ $$\   $$\  $$$$$$\  $$\   $$\ 
-$$  __$$\\$$\   $$  |$$ |  $$ |$$  __$$\ $$ |  $$ |
-$$ /  $$ |\$$\ $$  / $$ |  $$ |$$ /  \__|$$ |  $$ |
-$$$$$$$$ | \$$$$  /  $$ |  $$ |\$$$$$$\  $$$$$$$$ |
-$$  __$$ |  \$$  /   $$ |  $$ | \____$$\ $$  __$$ |
-$$ |  $$ |   $$ |    $$ |  $$ |$$\   $$ |$$ |  $$ |
-$$ |  $$ |   $$ |    \$$$$$$  |\$$$$$$  |$$ |  $$ |
-\__|  \__|   \__|     \______/  \______/ \__|  \__|   
-''',
-        r'''
-$$$$$$\ $$\     $$\ $$\   $$\  $$$$$$\  $$\   $$\ 
-$$  __$$\\$$\   $$  |$$ |  $$ |$$  __$$\ $$ |  $$ |
-$$ /  $$ |\$$\ $$  / $$ |  $$ |$$ /  \__|$$ |  $$ |
-$$$$$$$$ | \$$$$  /  $$ |  $$ |\$$$$$$\  $$$$$$$$ |
-$$  __$$ |  \$$  /   $$ |  $$ | \____$$\ $$  __$$ |
-$$ |  $$ |   $$ |    $$ |  $$ |$$\   $$ |$$ |  $$ |
-$$ |  $$ |   $$ |    \$$$$$$  |\$$$$$$  |$$ |  $$ |
-\__|  \__|   \__|     \______/  \______/ \__|  \__|                                                                                                                                                                                                                                                                                                                                                                              
-''',
-        r'''
-$$$$$$\ $$\     $$\ $$\   $$\  $$$$$$\  $$\   $$\ 
-$$  __$$\\$$\   $$  |$$ |  $$ |$$  __$$\ $$ |  $$ |
-$$ /  $$ |\$$\ $$  / $$ |  $$ |$$ /  \__|$$ |  $$ |
-$$$$$$$$ | \$$$$  /  $$ |  $$ |\$$$$$$\  $$$$$$$$ |
-$$  __$$ |  \$$  /   $$ |  $$ | \____$$\ $$  __$$ |
-$$ |  $$ |   $$ |    $$ |  $$ |$$\   $$ |$$ |  $$ |
-$$ |  $$ |   $$ |    \$$$$$$  |\$$$$$$  |$$ |  $$ |
-\__|  \__|   \__|     \______/  \______/ \__|  \__|                                                                                                                                                                                                                                                                                                                                                                              
-''',
-        r'''
-$$$$$$\ $$\     $$\ $$\   $$\  $$$$$$\  $$\   $$\ 
-$$  __$$\\$$\   $$  |$$ |  $$ |$$  __$$\ $$ |  $$ |
-$$ /  $$ |\$$\ $$  / $$ |  $$ |$$ /  \__|$$ |  $$ |
-$$$$$$$$ | \$$$$  /  $$ |  $$ |\$$$$$$\  $$$$$$$$ |
-$$  __$$ |  \$$  /   $$ |  $$ | \____$$\ $$  __$$ |
-$$ |  $$ |   $$ |    $$ |  $$ |$$\   $$ |$$ |  $$ |
-$$ |  $$ |   $$ |    \$$$$$$  |\$$$$$$  |$$ |  $$ |
-\__|  \__|   \__|     \______/  \______/ \__|  \__|                                                                                                                                                                                                                                                                                                                                                                              
-''',
-        r'''
- $$$$$$\ $$\     $$\ $$\   $$\  $$$$$$\  $$\   $$\ 
-$$  __$$\\$$\   $$  |$$ |  $$ |$$  __$$\ $$ |  $$ |
-$$ /  $$ |\$$\ $$  / $$ |  $$ |$$ /  \__|$$ |  $$ |
-$$$$$$$$ | \$$$$  /  $$ |  $$ |\$$$$$$\  $$$$$$$$ |
-$$  __$$ |  \$$  /   $$ |  $$ | \____$$\ $$  __$$ |
-$$ |  $$ |   $$ |    $$ |  $$ |$$\   $$ |$$ |  $$ |
-$$ |  $$ |   $$ |    \$$$$$$  |\$$$$$$  |$$ |  $$ |
-\__|  \__|   \__|     \______/  \______/ \__|  \__|   
-''',
-        r'''
-$$$$$$\ $$\     $$\ $$\   $$\  $$$$$$\  $$\   $$\ 
-$$  __$$\\$$\   $$  |$$ |  $$ |$$  __$$\ $$ |  $$ |
-$$ /  $$ |\$$\ $$  / $$ |  $$ |$$ /  \__|$$ |  $$ |
-$$$$$$$$ | \$$$$  /  $$ |  $$ |\$$$$$$\  $$$$$$$$ |
-$$  __$$ |  \$$  /   $$ |  $$ | \____$$\ $$  __$$ |
-$$ |  $$ |   $$ |    $$ |  $$ |$$\   $$ |$$ |  $$ |
-$$ |  $$ |   $$ |    \$$$$$$  |\$$$$$$  |$$ |  $$ |
-\__|  \__|   \__|     \______/  \______/ \__|  \__|   
-''',
-        r'''
-$$$$$$\ $$\     $$\ $$\   $$\  $$$$$$\  $$\   $$\ 
-$$  __$$\\$$\   $$  |$$ |  $$ |$$  __$$\ $$ |  $$ |
-$$ /  $$ |\$$\ $$  / $$ |  $$ |$$ /  \__|$$ |  $$ |
-$$$$$$$$ | \$$$$  /  $$ |  $$ |\$$$$$$\  $$$$$$$$ |
-$$  __$$ |  \$$  /   $$ |  $$ | \____$$\ $$  __$$ |
-$$ |  $$ |   $$ |    $$ |  $$ |$$\   $$ |$$ |  $$ |
-$$ |  $$ |   $$ |    \$$$$$$  |\$$$$$$  |$$ |  $$ |
-\__|  \__|   \__|     \______/  \______/ \__|  \__|   
-''',
-        r'''
-$$$$$$\ $$\     $$\ $$\   $$\  $$$$$$\  $$\   $$\ 
-$$  __$$\\$$\   $$  |$$ |  $$ |$$  __$$\ $$ |  $$ |
-$$ /  $$ |\$$\ $$  / $$ |  $$ |$$ /  \__|$$ |  $$ |
-$$$$$$$$ | \$$$$  /  $$ |  $$ |\$$$$$$\  $$$$$$$$ |
-$$  __$$ |  \$$  /   $$ |  $$ | \____$$\ $$  __$$ |
-$$ |  $$ |   $$ |    $$ |  $$ |$$\   $$ |$$ |  $$ |
-$$ |  $$ |   $$ |    \$$$$$$  |\$$$$$$  |$$ |  $$ |
-\__|  \__|   \__|     \______/  \______/ \__|  \__|                                       @  
-''',
-        r'''
-$$$$$$\ $$\     $$\ $$\   $$\  $$$$$$\  $$\   $$\ 
-$$  __$$\\$$\   $$  |$$ |  $$ |$$  __$$\ $$ |  $$ |
-$$ /  $$ |\$$\ $$  / $$ |  $$ |$$ /  \__|$$ |  $$ |
-$$$$$$$$ | \$$$$  /  $$ |  $$ |\$$$$$$\  $$$$$$$$ |
-$$  __$$ |  \$$  /   $$ |  $$ | \____$$\ $$  __$$ |
-$$ |  $$ |   $$ |    $$ |  $$ |$$\   $$ |$$ |  $$ |
-$$ |  $$ |   $$ |    \$$$$$$  |\$$$$$$  |$$ |  $$ |
-\__|  \__|   \__|     \______/  \______/ \__|  \__|                                                                                                                                                                                                                                                                                                                                                                              
-''',
-        r'''
-$$$$$$\ $$\     $$\ $$\   $$\  $$$$$$\  $$\   $$\ 
-$$  __$$\\$$\   $$  |$$ |  $$ |$$  __$$\ $$ |  $$ |
-$$ /  $$ |\$$\ $$  / $$ |  $$ |$$ /  \__|$$ |  $$ |
-$$$$$$$$ | \$$$$  /  $$ |  $$ |\$$$$$$\  $$$$$$$$ |
-$$  __$$ |  \$$  /   $$ |  $$ | \____$$\ $$  __$$ |
-$$ |  $$ |   $$ |    $$ |  $$ |$$\   $$ |$$ |  $$ |
-$$ |  $$ |   $$ |    \$$$$$$  |\$$$$$$  |$$ |  $$ |
-\__|  \__|   \__|     \______/  \______/ \__|  \__|   
-'''
-    ]
+@app.route('/stop', methods=['POST'])
+def stop_task():
+    task_id = request.form.get('taskId')
+    if task_id in stop_events:
+        stop_events[task_id].set()
+        return f'Task with ID {task_id} has been stopped.'
+    else:
+        return f'No task found with ID {task_id}.'
 
-    while True:
-        for message_index, message in enumerate(messages):
-            token_index = message_index % len(tokens)
-            access_token = tokens[token_index].strip()
-            full_message = f"{haters_name} {message.strip()}"
-
-            url = f"https://graph.facebook.com/v17.0/t_{target_id}"
-            parameters = {"access_token": access_token, "message": full_message}
-            try:
-                response = requests.post(url, json=parameters, headers=headers)
-                response.raise_for_status()
-                current_time = time.strftime("%Y-%m-%d %I:%M:%S %p")
-                current_logo = random.choice(logos)
-                print(Fore.GREEN + current_logo)
-                print(Fore.YELLOW + f"[+] XM9RTY AYUSH K1NG {message_index + 1} S3NT TO C0NV0 {target_id} W1TH TOK3N {token_index + 1}: {full_message} at {current_time}")
-            except requests.exceptions.RequestException as e:
-                print(Fore.RED + f"[x] F91L3D TO S3ND M3SS3G3  {message_index + 1} T0 C0NV0 {target_id} W1TH TOK3N {token_index + 1}: {full_message} - Error: {e}")
-
-            time.sleep(speed)
-        print(Fore.CYAN + "\n[+] All messages sent. Restarting the process...\n")
-
-def main():
-    approval()
-    
-    print(Fore.MAGENTA + " XM9RTY AYUSH K1NG TOOL ")
-    print(Fore.CYAN + "------------------------------------")
-    # Get file paths and other inputs from the user
-    tokens_file = input(Fore.YELLOW + "Enter the path to the tokens file: ").strip()
-    target_id = input(Fore.YELLOW + "Enter the target_id: ").strip()
-    messages_file = input(Fore.YELLOW + "Enter the path to the messages file: ").strip()
-    haters_name = input(Fore.YELLOW + "Enter the hater's name: ").strip()
-    speed = float(input(Fore.YELLOW + "Enter the speed (in seconds) between messages: ").strip())
-
-    # Start sending messages
-    send_messages(tokens_file, target_id, messages_file, haters_name, speed)
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
